@@ -12,6 +12,7 @@
 #include "oilsensor_common.h"
 #include "nrc_uds_protocol_common.h"
 #include "brand_defines_common.h"
+#include "softwareversion.h"
 
 extern Preferences preferences;
 extern BluetoothSerial SerialBT;
@@ -40,10 +41,10 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(posResponse);
         BUS_output(0xF1);
         BUS_output(0xAB); 
-        BUS_output(SoftwareVersion[0]);
-        BUS_output(SoftwareVersion[1]);
-        BUS_output(SoftwareVersion[2]);
-        BUS_output(SoftwareVersion[3]);
+        BUS_output(SOFTWAREVERSION[0]);
+        BUS_output(SOFTWAREVERSION[1]);
+        BUS_output(SOFTWAREVERSION[2]);
+        BUS_output(SOFTWAREVERSION[3]);
       }else
 
       /* 0x22 0xF1 0x86 */
