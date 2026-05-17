@@ -99,34 +99,36 @@ Preferences preferences;
 BluetoothSerial SerialBT;
 TFT_eSPI tft = TFT_eSPI();
 
-
+/*
 bool Impuls_1_High                      = false;
 bool Impuls_1_Low                       = false;
 bool Impuls_2_High                      = false;
 bool Impuls_2_Low                       = false;
-uint8_t session                         = UDS_Session_Control_Default_Session;
 
+*/
+uint8_t state                           = 0x00;
+uint8_t session                         = UDS_Session_Control_Default_Session;
 uint8_t displayselector                 = DISPLAY_SELECTOR_GC9A01;
-bool toggleflag                         = false;
+
 uint8_t signalinput                     = 0;
 uint16_t cnt                            = 0;
 uint8_t oilTemperature                  = OilTemperaturePercentageInitValue; /*init value 254*/
 uint8_t oilLevelPercentage              = OilLevelPercentageInitValue; /*init value 254*/
 uint8_t testValue_oilTemperature        = 85; /* Debugvalue 255 */
 uint8_t testValue_oilLevelPercentage    = 60; /* Debugvalue 255 */
-uint8_t lastOilTemp                      = 0;
-uint8_t lastOilLevel                     = 0;
-uint32_t startUpCounter                 = 0;
+uint8_t lastOilTemp                     = 0;
+uint8_t lastOilLevel                    = 0;
+uint8_t startUpCounter                  = 0;
 uint8_t brand                           = 0;
-//uint8_t startingsequence[]              = {0,50,100,50,0};
+
 hw_timer_t *timer                       = NULL;
 static uint16_t                         cntRawArr[4];
 static uint16_t                         returnArray[4];
-bool TempToggle                         = false;
 
       
 portMUX_TYPE timerMux                   = portMUX_INITIALIZER_UNLOCKED;
 String  Modulename                      =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
+
 bool statusOfExtraOutputPin             = false;
 
 
@@ -163,48 +165,85 @@ uint8_t BT_rx_buffer[Buffersize];
     
 
 void ARDUINO_ISR_ATTR onTimer() {
+  static bool toggleflag;
   /* This toggle is for debug purpose only.. */
   /* You could verify at Pin ISRDebugTogglePin how often the ISR is called. */
-  if (toggleflag == false) {
+  if (toggleflag) {
     digitalWrite(ISRDebugTogglePin, LOW);
-    toggleflag = true;
+    toggleflag =  false;
   } else {
     digitalWrite(ISRDebugTogglePin, HIGH);
-    toggleflag = false;
+    toggleflag = true;
   }
   signalinput = digitalRead(SignalInputPin);
 
+  
+  if ((state  == 0x00) && (signalinput == 0x01)){
+    //  first high signal
+    // T1 
+    TimeoutSensorDetected = false;
+    state = 0x01;
+  }else if((state  == 0x01) && (signalinput == 0x00)){
+    //  first low signal
+    // T2  
+    state = 0x02;
+    portENTER_CRITICAL(&timerMux);
+    cntRawArr[0] = cnt;
+    portEXIT_CRITICAL(&timerMux);
+  }else if((state  == 0x02) && (signalinput == 0x01)){
+    // 2nd high signal
+    // T3 
+    state = 0x03;
+    portENTER_CRITICAL(&timerMux);
+    cntRawArr[1] = cnt;
+    portEXIT_CRITICAL(&timerMux);
+  }else if((state  == 0x03) && (signalinput == 0x00)){
+    // T4 
+    state = 0x04;
+    portENTER_CRITICAL(&timerMux);
+    cntRawArr[2] = cnt;
+    portEXIT_CRITICAL(&timerMux);
 
+  }else if((state  == 0x04)&& (signalinput == 0x01)){
+    state = 0x00;
+    portENTER_CRITICAL(&timerMux);
+    cntRawArr[3] = cnt;
+    portEXIT_CRITICAL(&timerMux);
+    cnt = 1;
+  }
+  
+  /*
   if ((signalinput == 0x01) && (Impuls_1_High == false) && (Impuls_1_Low == false) && (Impuls_2_High == false) && (Impuls_2_Low == false)) {
-    /*  first high signal*/
-    /* T1 */
+    //  first high signal
+    // T1 
     Impuls_1_High = true;
     TimeoutSensorDetected = false;
+
   } else if ((signalinput == 0x00) && (Impuls_1_High == true) && (Impuls_1_Low == false) && (Impuls_2_High == false) && (Impuls_2_Low == false)) {
-    /*  first low signal*/
-    /* T2 */
+    //  first low signal 
+    // T2 
     Impuls_1_Low = true;
     portENTER_CRITICAL(&timerMux);
     cntRawArr[0] = cnt;
     portEXIT_CRITICAL(&timerMux);
 
   } else if ((signalinput == 0x01) && (Impuls_1_High == true) && (Impuls_1_Low == true) && (Impuls_2_High == false) && (Impuls_2_Low == false)) {
-    /* 2nd high signal*/
-    /* T3 */
+    // 2nd high signal 
+    // T3 
     Impuls_2_High = true;
     portENTER_CRITICAL(&timerMux);
     cntRawArr[1] = cnt;
     portEXIT_CRITICAL(&timerMux);
 
   } else if ((signalinput == 0x00) && (Impuls_1_High == true) && (Impuls_1_Low == true) && (Impuls_2_High == true) && (Impuls_2_Low == false)) {
-    /* T4 */
+    // T4 
     Impuls_2_Low = true;
     portENTER_CRITICAL(&timerMux);
     cntRawArr[2] = cnt;
     portEXIT_CRITICAL(&timerMux);
 
   } else if ((signalinput == 0x01) && (Impuls_1_High == true) && (Impuls_1_Low == true) && (Impuls_2_High == true) && (Impuls_2_Low == true)) {
-    /* T5 */
+    // T5 
     Impuls_1_High = false;
     Impuls_2_High = false;
     Impuls_1_Low  = false;
@@ -214,11 +253,17 @@ void ARDUINO_ISR_ATTR onTimer() {
     portEXIT_CRITICAL(&timerMux);
     cnt = 1;
   }
-
+*/
+  
+  if (state >0x00) {
+    cnt = cnt + 1;
+  }
+  
+ /*
   if (Impuls_1_High == true) {
     cnt = cnt + 1;
   }
-
+*/
 
   /* if sensor is disconnected -> cnt is higher than TimeoutSignalMS 1500->set to 0xFE*/
   if(cnt>TimeoutSignalMS)
@@ -448,19 +493,20 @@ void controlOfDisplay()
       startUpCounter = startUpCounter+1;
     }
     showOilLevelAtDisplay(oilLevelPercentage,false);
-  } 
+  } else
   /* short initialization sequence*/
   if((startUpCounter>=0) && (startUpCounter<20))
   {  
 
     showBrandLogo(brand);
+      
     tft.setTextSize(1);
-    /* Position of Text "Check" measured from the Top left corner (0,0) in Pixel */
+    // Position of Text "Check" measured from the Top left corner (0,0) in Pixel 
     tft.setCursor(110, 15);
     tft.print(SOFTWAREVERSION);
-    tft.setCursor(10, 210);
+    tft.setCursor(90, 205);
     tft.print("created by");
-    tft.setCursor(95, 225);
+    tft.setCursor(100, 220);
     tft.print("Der Arzt");
     startUpCounter = startUpCounter+1;
   }
@@ -471,16 +517,16 @@ void showBrandLogo(uint8_t brandvalue)
     tft.drawXBitmap(0, 0, vw_logo, VW_LOGOWIDTH, VW_LOGOHEIGHT,GC9A01A_BLUE,GC9A01A_WHITE);
   }else if(brandvalue == BRAND_AUDI_ALT){
     tft.drawXBitmap(0, 60, audi_alt_1, AUDI_LOGO_ALT_1_WIDTH, AUDI_LOGO_ALT_1_HEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
-    tft.drawXBitmap(0, 160, audi_alt_2, AUDI_LOGO_ALT_2_HEIGHT, AUDI_LOGO_ALT_2_HEIGHT,GC9A01A_RED,GC9A01A_BLACK);
+    tft.drawXBitmap(0, 160, audi_alt_2, AUDI_LOGO_ALT_2_WIDTH, AUDI_LOGO_ALT_2_HEIGHT,GC9A01A_RED,GC9A01A_BLACK);
   }else if(brandvalue == BRAND_AUDI_NEU){
     tft.drawXBitmap(0, 60, audi_alt_1, AUDI_LOGO_ALT_1_WIDTH, AUDI_LOGO_ALT_1_HEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
-
   }else if(brandvalue == BRAND_DODGE){
-    tft.drawXBitmap(0, 0, dodge_logo, DODGE_LOGOWIDTH, DODGE_LOGOHEIGHT,GC9A01A_BLUE,GC9A01A_WHITE);
+    tft.drawXBitmap(0, 0, dodge_logo, DODGE_LOGOWIDTH, DODGE_LOGOHEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
   }else if(brandvalue == BRAND_NISSAN_GTT){
-    tft.drawXBitmap(0, 0, gtt_logo, GTT_LOGOWIDTH, GTT_LOGOHEIGHT,GC9A01A_BLUE,GC9A01A_WHITE);
+    tft.drawXBitmap(0, 0, gtt_1_logo, GTT_1_LOGOWIDTH, GTT_1_LOGOHEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
+    tft.drawXBitmap(0, 105, gtt_2_logo, GTT_2_LOGOWIDTH, GTT_2_LOGOHEIGHT,GC9A01A_RED,GC9A01A_BLACK);
   }else if(brandvalue == BRAND_CHEVY){
-    tft.drawXBitmap(0, 0, chevy_logo, CHEVY_LOGOWIDTH, CHEVY_LOGOHEIGHT,GC9A01A_BLUE,GC9A01A_WHITE);
+    tft.drawXBitmap(0, 0, chevy_logo, CHEVY_LOGOWIDTH, CHEVY_LOGOHEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
   }else if(brandvalue == BRAND_Init){
 
   }

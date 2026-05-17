@@ -17,6 +17,7 @@
 extern Preferences preferences;
 extern BluetoothSerial SerialBT;
 extern uint8_t session;
+//extern
 
 
 void delete_BT_buffer()
@@ -58,14 +59,19 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
       }else
 
 
-      /* 0x22 0xF1 0x8C*/
+      
+      /* 0x22 0xF1 0x91 */
       /* Get actual Sesion */
-      if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x8C))
+      if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x91))
       {
         BUS_output(posResponse);
         BUS_output(0xF1);
-        BUS_output(0x8C);
+        BUS_output(0x91); 
+        BUS_output(session);
       }else
+
+
+
 
       /* 0x22 0xF1 0x97 */
       /* get Systemname */
@@ -74,8 +80,6 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(posResponse);
         BUS_output(0xF1);
         BUS_output(0x97);
-
-        
   
         //temp.toCharArray(Modulename, leng);
         //BUS_output(temp);
@@ -300,6 +304,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         {
           brand = receive_BT_Array[3];
           NewOilSensorEquipped = (bool) receive_BT_Array[4];
+          
           BUS_output(posResponse);
           BUS_output(0x06);
           BUS_output(0x00); 
@@ -572,7 +577,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         }
         else
         {
-          if((val==BRAND_AUDI_ALT)||(val==BRAND_VW)||(val==BRAND_AUDI_NEU))
+          if((val==BRAND_AUDI_ALT)||(val==BRAND_VW)||(val==BRAND_AUDI_NEU)||(val==BRAND_CHEVY)||(val==BRAND_DODGE)||(val==BRAND_NISSAN_GTT))
           {
             brand = val;
             preferences.begin(EEPROMNameSpace, false); 
@@ -583,9 +588,9 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
             BUS_output(0x06);
             BUS_output(0x0A); 
           }else{
-          BUS_output(0x7f);
-          BUS_output(0x2e);
-          BUS_output(UDS_NRC_requestOutOfRange);
+            BUS_output(0x7f);
+            BUS_output(0x2e);
+            BUS_output(UDS_NRC_requestOutOfRange);
           }
         }
       }

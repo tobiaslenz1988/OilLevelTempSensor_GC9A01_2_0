@@ -9,6 +9,7 @@
 #define BRAND_CHEVY					  0x05
 #define	BRAND_NISSAN_GTT			  0x06
 #define BRAND_NISSAN_Skyline	  	  0x07
-
+#define BRAND_DODGE	  	  			  0x08
+#define BRAND_BMW		  			  0x09
 
 #endif /*  BRAND_DEFINES_COMMON_H */
