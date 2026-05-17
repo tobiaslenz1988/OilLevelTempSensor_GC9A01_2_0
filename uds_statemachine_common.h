@@ -3,7 +3,7 @@
 
 #define EEPROMNameSpace               "my_variables"
 #define OutputPin                     28
-#define Buffersize                    25
+#define Buffersize                    35
 
 extern bool  NewData;
 

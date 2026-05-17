@@ -7,7 +7,7 @@ extern bool TimeoutSensorDetected;
 extern bool NewOilSensorEquipped; 
 
 extern uint8_t oilTemperature;
-extern uint8_t oilLevelPercentage ;
+extern uint8_t oilLevelPercentage;
 
 
 extern uint8_t testValue_oilTemperature;

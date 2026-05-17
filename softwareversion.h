@@ -1,0 +1,5 @@
+#ifndef SOFTWAREVERSION_H
+#define SOFTWAREVERSION_H
+
+#define SOFTWAREVERSION               "Y00A"
+#endif /* SOFTWAREVERSION_H */
