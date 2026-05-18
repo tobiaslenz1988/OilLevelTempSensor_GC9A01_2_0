@@ -76,7 +76,7 @@ T1   T2   T3    T4                  T5                    T1
 #include <Preferences.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <TJpg_Decoder.h>
 #include <SPI.h>
 #include <TFT_eSPI.h>
 
@@ -95,18 +95,19 @@ T1   T2   T3    T4                  T5                    T1
 #include "softwareversion.h"
 
 
+
 Preferences preferences;
 BluetoothSerial SerialBT;
 TFT_eSPI tft = TFT_eSPI();
 
-/*
+
 bool Impuls_1_High                      = false;
 bool Impuls_1_Low                       = false;
 bool Impuls_2_High                      = false;
 bool Impuls_2_Low                       = false;
 
-*/
-uint8_t state                           = 0x00;
+
+//uint8_t state                           = 0x00;
 uint8_t session                         = UDS_Session_Control_Default_Session;
 uint8_t displayselector                 = DISPLAY_SELECTOR_GC9A01;
 
@@ -118,7 +119,7 @@ uint8_t testValue_oilTemperature        = 85; /* Debugvalue 255 */
 uint8_t testValue_oilLevelPercentage    = 60; /* Debugvalue 255 */
 uint8_t lastOilTemp                     = 0;
 uint8_t lastOilLevel                    = 0;
-uint8_t startUpCounter                  = 0;
+uint16_t startUpCounter                  = 0;
 uint8_t brand                           = 0;
 
 hw_timer_t *timer                       = NULL;
@@ -160,6 +161,7 @@ bool NewOilSensorEquipped               = false;
 #define GC9A01A_WHITE                 0xFFFF
 #define GC9A01A_RED                   0xF800
 #define GC9A01A_BLUE                  0x001F
+#define time10s_ShowBrandLogo         400
 uint8_t BT_rx_buffer[Buffersize];
 
     
@@ -176,43 +178,7 @@ void ARDUINO_ISR_ATTR onTimer() {
     toggleflag = true;
   }
   signalinput = digitalRead(SignalInputPin);
-
   
-  if ((state  == 0x00) && (signalinput == 0x01)){
-    //  first high signal
-    // T1 
-    TimeoutSensorDetected = false;
-    state = 0x01;
-  }else if((state  == 0x01) && (signalinput == 0x00)){
-    //  first low signal
-    // T2  
-    state = 0x02;
-    portENTER_CRITICAL(&timerMux);
-    cntRawArr[0] = cnt;
-    portEXIT_CRITICAL(&timerMux);
-  }else if((state  == 0x02) && (signalinput == 0x01)){
-    // 2nd high signal
-    // T3 
-    state = 0x03;
-    portENTER_CRITICAL(&timerMux);
-    cntRawArr[1] = cnt;
-    portEXIT_CRITICAL(&timerMux);
-  }else if((state  == 0x03) && (signalinput == 0x00)){
-    // T4 
-    state = 0x04;
-    portENTER_CRITICAL(&timerMux);
-    cntRawArr[2] = cnt;
-    portEXIT_CRITICAL(&timerMux);
-
-  }else if((state  == 0x04)&& (signalinput == 0x01)){
-    state = 0x00;
-    portENTER_CRITICAL(&timerMux);
-    cntRawArr[3] = cnt;
-    portEXIT_CRITICAL(&timerMux);
-    cnt = 1;
-  }
-  
-  /*
   if ((signalinput == 0x01) && (Impuls_1_High == false) && (Impuls_1_Low == false) && (Impuls_2_High == false) && (Impuls_2_Low == false)) {
     //  first high signal
     // T1 
@@ -253,17 +219,11 @@ void ARDUINO_ISR_ATTR onTimer() {
     portEXIT_CRITICAL(&timerMux);
     cnt = 1;
   }
-*/
-  
-  if (state >0x00) {
-    cnt = cnt + 1;
-  }
-  
- /*
+ 
   if (Impuls_1_High == true) {
     cnt = cnt + 1;
   }
-*/
+
 
   /* if sensor is disconnected -> cnt is higher than TimeoutSignalMS 1500->set to 0xFE*/
   if(cnt>TimeoutSignalMS)
@@ -396,7 +356,6 @@ void showOilLevelAtDisplay(uint8_t percentageOillevel,bool initflag)
       if(percentageOillevel == 90){tft.drawBitmap(OFFSET_IMAGE_X, OFFSET_IMAGE_Y, image_OilLevel_90, IMAGE_WIDTH, IMAGE_HEIGHT,GC9A01A_WHITE);} else
       if(percentageOillevel == 100){tft.drawBitmap(OFFSET_IMAGE_X, OFFSET_IMAGE_Y, image_OilLevel_100, IMAGE_WIDTH, IMAGE_HEIGHT,GC9A01A_WHITE);} 
       tft.setTextSize(2);
-      
       tft.setTextColor(GC9A01A_WHITE);
       tft.setCursor(67, 37);
       tft.print("MAX");
@@ -461,6 +420,7 @@ void showOilLevelAtDisplay(uint8_t percentageOillevel,bool initflag)
       }
     }
   }else{
+        tft.fillScreen(GC9A01A_BLACK);
         /* timeout detected*/
         tft.setTextSize(4);
         /* Position of Text "Check" measured from the Top left corner (0,0) in Pixel */
@@ -485,9 +445,9 @@ void showOilLevelAtDisplay(uint8_t percentageOillevel,bool initflag)
 void controlOfDisplay()
 {
   //tft.fillScreen(GC9A01A_BLACK);
-  if ((startUpCounter>=20) && (startUpCounter<=25) )
+  if ((startUpCounter>=time10s_ShowBrandLogo) && (startUpCounter<=1000) )
   {
-    if(startUpCounter==20){
+    if(startUpCounter==time10s_ShowBrandLogo){
       tft.fillScreen(GC9A01A_BLACK);
       tft.setTextColor(GC9A01A_WHITE);
       startUpCounter = startUpCounter+1;
@@ -495,12 +455,12 @@ void controlOfDisplay()
     showOilLevelAtDisplay(oilLevelPercentage,false);
   } else
   /* short initialization sequence*/
-  if((startUpCounter>=0) && (startUpCounter<20))
+  if((startUpCounter>=0) && (startUpCounter<time10s_ShowBrandLogo))
   {  
-
-    showBrandLogo(brand);
-      
-    tft.setTextSize(1);
+    if(startUpCounter==0)
+    {
+      showBrandLogo(brand);
+    }
     // Position of Text "Check" measured from the Top left corner (0,0) in Pixel 
     tft.setCursor(110, 15);
     tft.print(SOFTWAREVERSION);
@@ -508,28 +468,51 @@ void controlOfDisplay()
     tft.print("created by");
     tft.setCursor(100, 220);
     tft.print("Der Arzt");
+    
     startUpCounter = startUpCounter+1;
   }
 }
 void showBrandLogo(uint8_t brandvalue)
-{
+{  
   if(brandvalue == BRAND_VW){
-    tft.drawXBitmap(0, 0, vw_logo, VW_LOGOWIDTH, VW_LOGOHEIGHT,GC9A01A_BLUE,GC9A01A_WHITE);
+    uint16_t w = 0, h = 0;
+    tft.setTextColor(GC9A01A_BLACK);
+    TJpgDec.getJpgSize(&w, &h, vw_logo, sizeof(vw_logo));
+    TJpgDec.drawJpg(0, 0, vw_logo, sizeof(vw_logo));
+
   }else if(brandvalue == BRAND_AUDI_ALT){
-    tft.drawXBitmap(0, 60, audi_alt_1, AUDI_LOGO_ALT_1_WIDTH, AUDI_LOGO_ALT_1_HEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
-    tft.drawXBitmap(0, 160, audi_alt_2, AUDI_LOGO_ALT_2_WIDTH, AUDI_LOGO_ALT_2_HEIGHT,GC9A01A_RED,GC9A01A_BLACK);
+    uint16_t w = 0, h = 0;
+    tft.fillScreen(GC9A01A_WHITE);
+    tft.setTextColor(GC9A01A_BLACK);
+    TJpgDec.getJpgSize(&w, &h, audi_alt_logo, sizeof(audi_alt_logo));
+    TJpgDec.drawJpg(0, 50, audi_alt_logo, sizeof(audi_alt_logo));
+
   }else if(brandvalue == BRAND_AUDI_NEU){
-    tft.drawXBitmap(0, 60, audi_alt_1, AUDI_LOGO_ALT_1_WIDTH, AUDI_LOGO_ALT_1_HEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
+
   }else if(brandvalue == BRAND_DODGE){
-    tft.drawXBitmap(0, 0, dodge_logo, DODGE_LOGOWIDTH, DODGE_LOGOHEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
+    uint16_t w = 0, h = 0;
+    tft.fillScreen(GC9A01A_BLACK);
+    tft.setTextColor(GC9A01A_WHITE);
+    TJpgDec.getJpgSize(&w, &h, dodge_logo, sizeof(dodge_logo));
+    TJpgDec.drawJpg(0, 115, dodge_logo, sizeof(dodge_logo));
+
   }else if(brandvalue == BRAND_NISSAN_GTT){
-    tft.drawXBitmap(0, 0, gtt_1_logo, GTT_1_LOGOWIDTH, GTT_1_LOGOHEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
-    tft.drawXBitmap(0, 105, gtt_2_logo, GTT_2_LOGOWIDTH, GTT_2_LOGOHEIGHT,GC9A01A_RED,GC9A01A_BLACK);
+    uint16_t w = 0, h = 0;
+    tft.fillScreen(GC9A01A_WHITE);
+    tft.setTextColor(GC9A01A_BLACK);
+    TJpgDec.getJpgSize(&w, &h, gtt_logo, sizeof(gtt_logo));
+    TJpgDec.drawJpg(5, 50, gtt_logo, sizeof(gtt_logo));
+
   }else if(brandvalue == BRAND_CHEVY){
-    tft.drawXBitmap(0, 0, chevy_logo, CHEVY_LOGOWIDTH, CHEVY_LOGOHEIGHT,GC9A01A_WHITE,GC9A01A_BLACK);
+    uint16_t w = 0, h = 0;
+    tft.fillScreen(GC9A01A_BLACK);
+    tft.setTextColor(GC9A01A_WHITE);
+    TJpgDec.getJpgSize(&w, &h, chevy_logo, sizeof(chevy_logo));
+    TJpgDec.drawJpg(0, 80, chevy_logo, sizeof(chevy_logo));
   }else if(brandvalue == BRAND_Init){
 
   }
+  
 }
 
 
@@ -545,8 +528,6 @@ void readEepromValues()
   brand = preferences.getUChar("Brand",BRAND_VW);
 
   Modulename =  preferences.getString("Modulename","1111");
-
-
   OldOilTempCompValues[0] = preferences.getUShort("Old_sensor_Temperature_30",Old_sensor_Temperature_30);
   OldOilTempCompValues[1] = preferences.getUShort("Old_sensor_Temperature_40",Old_sensor_Temperature_40);
   OldOilTempCompValues[2] = preferences.getUShort("Old_sensor_Temperature_50",Old_sensor_Temperature_50);
@@ -579,7 +560,23 @@ void readEepromValues()
   preferences.end();
 }
 
+// This next function will be called during decoding of the jpeg file to
+// render each block to the TFT.  If you use a different TFT library
+// you will need to adapt this function to suit.
+bool tft_output(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap)
+{
+   // Stop further decoding as image is running off bottom of screen
+  if ( y >= tft.height() ) return 0;
 
+  // This function will clip the image block rendering automatically at the TFT boundaries
+  tft.pushImage(x, y, w, h, bitmap);
+
+  // This might work instead if you adapt the sketch to use the Adafruit_GFX library
+  // tft.drawRGBBitmap(x, y, bitmap, w, h);
+
+  // Return 1 to decode next block
+  return 1;
+}
 
 void setup() {
   readEepromValues();
@@ -621,6 +618,15 @@ void setup() {
   
   tft.fillScreen(GC9A01A_BLACK);
   tft.setTextColor(GC9A01A_WHITE);
+
+    // The jpeg image can be scaled by a factor of 1, 2, 4, or 8
+  TJpgDec.setJpgScale(1);
+
+  // The byte order can be swapped (set true for TFT_eSPI)
+  TJpgDec.setSwapBytes(true);
+
+  // The decoder must be given the exact name of the rendering function above
+  TJpgDec.setCallback(tft_output);
 }
 
 
