@@ -129,9 +129,8 @@ static uint16_t                         returnArray[4];
       
 portMUX_TYPE timerMux                   = portMUX_INITIALIZER_UNLOCKED;
 String  Modulename                      =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
-String  PartNumberOilTempSensor         =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0};
-String  PartNumberWaterTempSensor       =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0};
-String  HWModuleName                    =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0};
+
+bool statusOfExtraOutputPin             = false;
 
 
 uint16_t OldOilTempCompValues[]         = {Old_sensor_Temperature_30,Old_sensor_Temperature_40,Old_sensor_Temperature_50,Old_sensor_Temperature_55,Old_sensor_Temperature_60,Old_sensor_Temperature_65,Old_sensor_Temperature_70,Old_sensor_Temperature_75,Old_sensor_Temperature_80,Old_sensor_Temperature_85,Old_sensor_Temperature_90,Old_sensor_Temperature_95,Old_sensor_Temperature_100,Old_sensor_Temperature_105,Old_sensor_Temperature_110,Old_sensor_Temperature_115};
@@ -141,8 +140,6 @@ bool NewData                            = false;
 bool TimeoutSensorDetected              = true;
 bool toggleInvertDisplayFlag            = false;
 bool NewOilSensorEquipped               = false;
-bool statusOfExtraOutputPin             = false;
-
 //#define SOFTWAREVERSION               "Y006"
 //#define EEPROMNameSpace               "my_variables"
 #define SignalInputPin                2
@@ -525,15 +522,14 @@ void readEepromValues()
   preferences.begin(EEPROMNameSpace, false);
     
   session               = (uint8_t) preferences.getUChar("session",UDS_Session_Control_Default_Session);
+  
   NewOilSensorEquipped  = preferences.getBool("NewSensorflag",false);
+
   brand = preferences.getUChar("Brand",BRAND_VW);
 
-  Modulename                =  preferences.getString("Modulename","1111");
-  PartNumberOilTempSensor   =  preferences.getString("PartNumberOilTempSensor","------------"); 
-  PartNumberWaterTempSensor =  preferences.getString("PartNumberWaterTempSensor","------------"); 
-  HWModuleName              =  preferences.getString("HWModuleName","------------"); 
+  Modulename =  preferences.getString("Modulename","1111");
 
-  
+
   OldOilTempCompValues[0] = preferences.getUShort("Old_sensor_Temperature_30",Old_sensor_Temperature_30);
   OldOilTempCompValues[1] = preferences.getUShort("Old_sensor_Temperature_40",Old_sensor_Temperature_40);
   OldOilTempCompValues[2] = preferences.getUShort("Old_sensor_Temperature_50",Old_sensor_Temperature_50);
