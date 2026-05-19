@@ -128,9 +128,9 @@ static uint16_t                         returnArray[4];
       
 portMUX_TYPE timerMux                   =  portMUX_INITIALIZER_UNLOCKED;
 String  Modulename                      =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
-String  HWModuleName                    =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};// ESP32
-String  PartNumberOilTempSensor         =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};
-String  PartNumberWaterTempSensor       =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};
+String  HWModuleName                    =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};// ESP32
+String  PartNumberOilTempSensor         =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};
+String  PartNumberWaterTempSensor       =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};
 
 
 
@@ -512,6 +512,13 @@ void showBrandLogo(uint8_t brandvalue)
     tft.setTextColor(GC9A01A_WHITE);
     TJpgDec.getJpgSize(&w, &h, chevy_logo, sizeof(chevy_logo));
     TJpgDec.drawJpg(0, 80, chevy_logo, sizeof(chevy_logo));
+    
+  }else if(brandvalue == BRAND_BMW){
+    uint16_t w = 0, h = 0;
+    tft.fillScreen(GC9A01A_BLACK);
+    tft.setTextColor(GC9A01A_WHITE);
+    TJpgDec.getJpgSize(&w, &h, bmw_logo, sizeof(bmw_logo));
+    TJpgDec.drawJpg(0, 0, bmw_logo, sizeof(bmw_logo));
   }else if(brandvalue == BRAND_Init){
 
   }
@@ -528,7 +535,7 @@ void readEepromValues()
   NewOilSensorEquipped  = preferences.getBool("NewSensorflag",false);
   brandSelector = preferences.getUChar("Brand",BRAND_VW);
 
-  Modulename                =  preferences.getString("Modulename","1111");
+  Modulename                =  preferences.getString("Modulename","OilSensor");
   PartNumberOilTempSensor   =  preferences.getString("PartNumberOilTempSensor",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
   PartNumberWaterTempSensor =  preferences.getString("PartNumberWaterTempSensor", {'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
   HWModuleName              =  preferences.getString("HWModuleName",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
@@ -636,62 +643,6 @@ void setup() {
 
   // The decoder must be given the exact name of the rendering function above
   TJpgDec.setCallback(tft_output);
-
-
-/*
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
-    delay(5000);
-    ESP.restart();
-  }
-
-  // Port defaults to 3232
-   ArduinoOTA.setPort(3232);
-
-  // Hostname defaults to esp3232-[MAC]
-   ArduinoOTA.setHostname("myesp32");
-
-  // Password can be set with plain text (will be hashed internally)
-  // The authentication uses PBKDF2-HMAC-SHA256 with 10,000 iterations
-   ArduinoOTA.setPassword("admin");
-    ArduinoOTA
-    .onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH) {
-        type = "sketch";
-      } else {  // U_SPIFFS
-        type = "filesystem";
-      }
-
-      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
-      //Serial.println("Start updating " + type);
-    })
-    .onEnd([]() {
-      //Serial.println("\nEnd");
-    })
-    .onProgress([](unsigned int progress, unsigned int total) {
-      if (millis() - last_ota_time > 500) {
-        //Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
-        last_ota_time = millis();
-      }
-    })
-    .onError([](ota_error_t error) {
-        //Serial.printf("Error[%u]: ", error);
-      if (error == OTA_AUTH_ERROR) {
-        //Serial.println("Auth Failed");
-      } else if (error == OTA_BEGIN_ERROR) {
-        //Serial.println("Begin Failed");
-      } else if (error == OTA_CONNECT_ERROR) {
-        //Serial.println("Connect Failed");
-      } else if (error == OTA_RECEIVE_ERROR) {
-        //Serial.println("Receive Failed");
-      } else if (error == OTA_END_ERROR) {
-        //Serial.println("End Failed");
-      }
-    });
-
-  ArduinoOTA.begin();*/
 }
 
 
