@@ -9,7 +9,7 @@ extern bool  NewData;
 
 extern uint8_t BT_rx_buffer[];       
 extern bool  statusOfExtraOutputPin;
-extern uint8_t brand;
+extern uint8_t brandSelector;
 extern char SoftwareVersion[];
 extern String Modulename;
 void analyse_BT_Protocol(uint8_t receive_BT_Array[]);

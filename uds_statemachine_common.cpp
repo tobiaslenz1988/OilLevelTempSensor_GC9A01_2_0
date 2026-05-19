@@ -136,7 +136,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
           BUS_output(posResponse);
           BUS_output(0x06);
           BUS_output(0x00); 
-          BUS_output(brand);
+          BUS_output(brandSelector);
           BUS_output(NewOilSensorEquipped);
 
       }else
@@ -197,7 +197,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(posResponse);
         BUS_output(0x06);
         BUS_output(0x0A);                  
-        BUS_output(brand);
+        BUS_output(brandSelector);
       }
       else
 
@@ -317,7 +317,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
 
           uint8_t i; 
           String tempStr;
-          PartNumberOilTempSensor = {'-','-','-','-','-', '-','-','-','-','-', '-','-',};
+          PartNumberOilTempSensor = {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};
           uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
@@ -342,7 +342,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
 
           uint8_t i; 
           String tempStr;
-          PartNumberWaterTempSensor = {'-','-','-','-','-', '-','-','-','-','-', '-','-',};
+          PartNumberWaterTempSensor = {'-','-','-','-','-', '-','-','-','-','-','-','-','-','-','-' };
            uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
@@ -367,7 +367,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
 
           uint8_t i; 
           String tempStr;
-          HWModuleName = {'-','-','-','-','-', '-','-','-','-','-', '-','-',};
+          HWModuleName = {'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', };
            uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
@@ -434,7 +434,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
 
         if((receive_BT_Array[3]!=NULL)&&(receive_BT_Array[4]!=NULL)&&(receive_BT_Array[5]!=NULL))
         {
-          brand = receive_BT_Array[3];
+          brandSelector = receive_BT_Array[3];
           NewOilSensorEquipped = (bool) receive_BT_Array[4];
           
           BUS_output(posResponse);
@@ -506,7 +506,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         {
           if((val==BRAND_AUDI_ALT)||(val==BRAND_VW)||(val==BRAND_AUDI_NEU)||(val==BRAND_CHEVY)||(val==BRAND_DODGE)||(val==BRAND_NISSAN_GTT))
           {
-            brand = val;
+            brandSelector = val;
             preferences.begin(EEPROMNameSpace, false); 
             preferences.putUChar("Brand",val);
             preferences.end();
