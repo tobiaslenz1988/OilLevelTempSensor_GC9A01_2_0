@@ -1,7 +1,9 @@
 
 /*
   This example is for the combined OilLevel/Temoerature Sensor G266 of the VAG Family.
-  There are two types of the Sensor:
+  There are all in all three types of the Sensors:
+
+
 
   The "old" Version, used in 
   -Audi A4 (B5) 1.8 20V 
@@ -10,14 +12,18 @@
   -VW Golf 5 1.9 TDI
   -etc...
 
-  The old Version has the Part Numbers 
+  The old Version has the Part Numbers (f.e. Hella  6PR 008 079-071 )
   - 1J0 907 660 
   - 1J0 907 660 A
   - 1J0 907 660 B
   - 1J0 907 660 C
   - 1J0 907 660 F
 
-  The old Version has a metal big Plate at the Bottom and the Tube to measure the oil is ONE PIECE and is formed in a rectangular form and NOT Square.
+  The old Version has a metal big Plate at the Bottom and the Tube to measure the oil is ONE PIECE and is formed in a small rectangular form and NOT Square.
+
+
+
+
 
 
   The "new" Version, used in 
@@ -25,11 +31,27 @@
   - Audi Q5 from 2010
   - etc
 
-  The new Version has the Part Numbers 
-  03C 907 660 M
+  The new Version has the Part Numbers (f.e. Hella  6PR 013 680-011 )
+  - 03C 907 660 C
+  - 03C 907 660 D
+  - 03C 907 660 H
+  - 03C 907 660 M
+  - 03C 907 660 T
+
+  In the newer Version the Bottom is made of plastic and the Tube to measure the oil is Two PIECES. The Tube itself is formed in a H-Design and at the top of the Tube is a square 2nd Part
 
 
-  In the new Version the Bottom is made of plastic and the Tube to measure the oil is Two PIECES. The Tube itself is formed in a H-Design and at the top of the Tube is a square 2nd Part
+
+
+
+
+
+  The newest version is built in in many actual cars
+  The newest Version has the Part Numbers (f.e. Hella   6PR 013 680-031  )
+  - 03C 907 660 C
+
+
+  In the newest Version the Bottom is made of plastic and the Tube to measure the oil is one round small tube with one light blue cap.
 
 
 
