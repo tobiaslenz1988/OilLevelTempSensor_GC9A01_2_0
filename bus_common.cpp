@@ -5,19 +5,16 @@
 
 
 extern BluetoothSerial SerialBT;
-extern bool NewData;
-extern uint8_t BT_rx_buffer[];
+
 
 void BUS_output(uint8_t data )
 {
-	SerialBT.write(data);	
-}
-/*
+    SerialBT.write(data);
+};
+
 void initBtConnection(String name)
 {
-	  SerialBT.begin(name);
+    SerialBT.begin(name);
 }
-
-*/
 
 

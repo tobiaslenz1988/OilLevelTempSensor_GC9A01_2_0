@@ -13,13 +13,16 @@
 #include "nrc_uds_protocol_common.h"
 #include "brand_defines_common.h"
 #include "softwareversion.h"
+#include "sensors/sensors.h"
 
 extern Preferences preferences;
 extern BluetoothSerial SerialBT;
 extern uint8_t session;
-extern String  PartNumberOilTempSensor   ;      
-extern String  PartNumberWaterTempSensor ;      
-extern String  HWModuleName              ;     
+extern String  vwPartNumberOilTempSensor        ;
+extern String  supplierPartNumberOilTempSensor  ;    
+extern String  vwPartNumberWaterTempSensor      ;
+extern String  supplierPartNumberWaterTempSensor;      
+extern String  HWModuleName                     ;     
 
 
 void delete_BT_buffer()
@@ -60,19 +63,33 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(session);
       }else
 
+      /* 0x22 0xF1 0x90 */
+      /* Get Name of Central Chip */
+      if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x90))
+      {
+        BUS_output(posResponse);
+        BUS_output(0xF1);
+        BUS_output(0x90); 
+        uint8_t i=0;
+        while(HWModuleName[i] != '-')
+        {
+          BUS_output(HWModuleName[i]);
+          i=i+1;
+        }
+      }else
 
       
       /* 0x22 0xF1 0x91 */
-      /* Get PartNumber of OilTempSensor */
+      /* Get VWPartNumber of OilTempSensor */
       if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x91))
       {
         BUS_output(posResponse);
         BUS_output(0xF1);
         BUS_output(0x91); 
         uint8_t i=0;
-        while(PartNumberOilTempSensor[i] != '-')
+        while(vwPartNumberOilTempSensor[i] != '-')
         {
-          BUS_output(PartNumberOilTempSensor[i]);
+          BUS_output(vwPartNumberOilTempSensor[i]);
           i=i+1;
         }
     
@@ -86,24 +103,24 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(0xF1);
         BUS_output(0x92); 
         uint8_t i=0;
-        while(PartNumberWaterTempSensor[i] != '-')
+        while(vwPartNumberWaterTempSensor[i] != '-')
         {
-          BUS_output(PartNumberWaterTempSensor[i]);
+          BUS_output(vwPartNumberWaterTempSensor[i]);
           i=i+1;
         }
       }else
 
       /* 0x22 0xF1 0x93 */
-      /* Get Name of Central Chip */
+      /* set SupplierPartNumber of OilTempSensor */
       if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x93))
       {
         BUS_output(posResponse);
         BUS_output(0xF1);
         BUS_output(0x93); 
         uint8_t i=0;
-        while(HWModuleName[i] != '-')
+        while(supplierPartNumberOilTempSensor[i] != '-')
         {
-          BUS_output(HWModuleName[i]);
+          BUS_output(supplierPartNumberOilTempSensor[i]);
           i=i+1;
         }
       }else
@@ -117,8 +134,6 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(0xF1);
         BUS_output(0x97);
   
-        //temp.toCharArray(Modulename, leng);
-        //BUS_output(temp);
         uint8_t sizeOfArr = sizeof(Modulename) / sizeof(Modulename[0]);
         uint8_t i;
         while(Modulename[i] != 0x00)
@@ -292,38 +307,61 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(0x03);
         
       }else
-
-
-
       {
         BUS_output(0x7F);
         BUS_output(UDS_READ_DATA_BY_IDENTIFIER);
         BUS_output(UDS_NRC_requestOutOfRange);
-      }
-  
-    
+      }    
     }else
-    
+
+        
+
+
+
 
     /*Command to write something*/
     if(receive_BT_Array[0] == UDS_WRITE_DATA_BY_IDENTIFIER)
     {
       uint8_t posResponse = (UDS_WRITE_DATA_BY_IDENTIFIER + 0x40);
 
+
+      /* 0x2E 0xf1 0x90 */
+      /* set Name of central chip */
+      if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x90))
+      {
+          uint8_t i; 
+          String tempStr;
+          HWModuleName = {'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-' };
+          uint8_t length_of_name = receive_BT_Array[3];
+          for (i=0;i<length_of_name;i++)
+          {
+            tempStr.concat((char) receive_BT_Array[4+i]);
+            HWModuleName[i] = receive_BT_Array[4+i];
+          }
+        
+          preferences.begin(EEPROMNameSpace, false); 
+          preferences.putString("HWModuleName",tempStr);
+          preferences.end();
+          BUS_output(posResponse);
+          BUS_output(0xF1);
+          BUS_output(0x90); 
+      }else
+
+
       /* 0x2E 0xf1 0x91 */
-      /* set PartNumber of OilTempSensor */
+      /* set VWPartNumber of OilTempSensor */
       if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x91))
       {
 
           uint8_t i; 
           String tempStr;
-          PartNumberOilTempSensor = {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};
+          vwPartNumberOilTempSensor = DEFAULT_VW_PARTNUMBER_OIL_TEMPSENSOR;
           uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
             //Modulename[i] =  (char) receive_BT_Array[4+i];
             tempStr.concat((char) receive_BT_Array[4+i]);
-            PartNumberOilTempSensor[i] = receive_BT_Array[4+i];
+            vwPartNumberOilTempSensor[i] = receive_BT_Array[4+i];
           }
       
           preferences.begin(EEPROMNameSpace, false); 
@@ -336,19 +374,18 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
       else
 
       /* 0x2E 0xf1 0x92 */
-      /* set PartNumber of WaterTempSensor */
+      /* set VWPartNumber of WaterTempSensor */
       if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x92))
       {
 
           uint8_t i; 
           String tempStr;
-          PartNumberWaterTempSensor = {'-','-','-','-','-', '-','-','-','-','-','-','-','-','-','-' };
+          vwPartNumberWaterTempSensor = DEFAULT_VW_PARTNUMBER_WATER_TEMPSENSOR;
            uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
-            //Modulename[i] =  (char) receive_BT_Array[4+i];
             tempStr.concat((char) receive_BT_Array[4+i]);
-            PartNumberWaterTempSensor[i] = receive_BT_Array[4+i];
+            vwPartNumberWaterTempSensor[i] = receive_BT_Array[4+i];
           }
       
           preferences.begin(EEPROMNameSpace, false); 
@@ -361,27 +398,51 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
       else
 
       /* 0x2E 0xf1 0x93 */
-      /* set Name of central chip */
+      /* set SupplierPartNumber of OilTempSensor */
       if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x93))
       {
 
           uint8_t i; 
           String tempStr;
-          HWModuleName = {'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', };
-           uint8_t length_of_name = receive_BT_Array[3];
+          supplierPartNumberOilTempSensor = DEFAULT_SUPPLIER_PARTNUMBER_OIL_TEMPSENSOR;
+          uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
-            //Modulename[i] =  (char) receive_BT_Array[4+i];
             tempStr.concat((char) receive_BT_Array[4+i]);
-            HWModuleName[i] = receive_BT_Array[4+i];
+            supplierPartNumberOilTempSensor[i] = receive_BT_Array[4+i];
           }
       
           preferences.begin(EEPROMNameSpace, false); 
-          preferences.putString("HWModuleName",tempStr);
+          preferences.putString("supplierPartNumberOilTempSensor",tempStr);
           preferences.end();
           BUS_output(posResponse);
           BUS_output(0xF1);
           BUS_output(0x93); 
+      }
+      else
+
+
+      /* 0x2E 0xf1 0x94 */
+      /* set SupplierPartNumber of Water Tempsensor */
+      if((receive_BT_Array[1]==0xF1) && (receive_BT_Array[2]==0x94))
+      {
+
+          uint8_t i; 
+          String tempStr;
+          supplierPartNumberWaterTempSensor = DEFAULT_SUPPLIER_PARTNUMBER_WATER_TEMPSENSOR;
+          uint8_t length_of_name = receive_BT_Array[3];
+          for (i=0;i<length_of_name;i++)
+          {
+            tempStr.concat((char) receive_BT_Array[4+i]);
+            supplierPartNumberWaterTempSensor[i] = receive_BT_Array[4+i];
+          }
+      
+          preferences.begin(EEPROMNameSpace, false); 
+          preferences.putString("supplierPartNumberWaterTempSensor",tempStr);
+          preferences.end();
+          BUS_output(posResponse);
+          BUS_output(0xF1);
+          BUS_output(0x94); 
       }
       else
 
@@ -398,24 +459,14 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
           Modulename =    {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
           for (i=0;i<length_of_name;i++)
           {
-            //Modulename[i] =  (char) receive_BT_Array[4+i];
             tempStr.concat((char) receive_BT_Array[4+i]);
-            Modulename[i] = receive_BT_Array[4+i];
+            Modulename[i] =  receive_BT_Array[4+i];
           }
-      
-         /*  
-          for (i=0;i<length_of_name;i++)
-          {
-            Modulename[i] = Temparr[i];
-          }
-          */
        
           preferences.begin(EEPROMNameSpace, false); 
           preferences.putString("Modulename",tempStr);
           preferences.end();
-          //Modulename =  Temparray;
           SerialBT.begin(tempStr);
-         // Modulename=Temparr;
           BUS_output(posResponse);
           BUS_output(0xF1);
           BUS_output(0x97); 
@@ -504,7 +555,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         }
         else
         {
-          if((val==BRAND_AUDI_ALT)||(val==BRAND_VW)||(val==BRAND_AUDI_NEU)||(val==BRAND_CHEVY)||(val==BRAND_DODGE)||(val==BRAND_NISSAN_GTT))
+          if((val==BRAND_AUDI_ALT)||(val==BRAND_VW)||(val==BRAND_AUDI_NEU)||(val==BRAND_CHEVY)||(val==BRAND_DODGE)||(val==BRAND_NISSAN_GTT)||(val==BRAND_BMW))
           {
             brandSelector = val;
             preferences.begin(EEPROMNameSpace, false); 

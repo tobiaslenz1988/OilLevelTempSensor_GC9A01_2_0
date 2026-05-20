@@ -95,7 +95,6 @@ T1   T2   T3    T4                  T5                    T1
 #include "softwareversion.h"
 
 
-
 Preferences preferences;
 BluetoothSerial SerialBT;
 TFT_eSPI tft = TFT_eSPI();
@@ -119,19 +118,20 @@ uint8_t testValue_oilTemperature        = 85; /* Debugvalue 255 */
 uint8_t testValue_oilLevelPercentage    = 60; /* Debugvalue 255 */
 uint8_t lastOilTemp                     = 0;
 uint8_t lastOilLevel                    = 0;
-uint16_t startUpCounter                  = 0;
-uint8_t brand                           = 0;
+uint16_t startUpCounter                 = 0;
+uint8_t brandSelector                   = 0;
 
 hw_timer_t *timer                       = NULL;
 static uint16_t                         cntRawArr[4];
 static uint16_t                         returnArray[4];
 
       
-portMUX_TYPE timerMux                   = portMUX_INITIALIZER_UNLOCKED;
+portMUX_TYPE timerMux                   =  portMUX_INITIALIZER_UNLOCKED;
 String  Modulename                      =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
-String  PartNumberOilTempSensor         =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0};
-String  PartNumberWaterTempSensor       =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0};
-String  HWModuleName                    =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0};
+String  HWModuleName                    =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};// ESP32
+String  PartNumberOilTempSensor         =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};
+String  PartNumberWaterTempSensor       =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-',};
+
 
 
 uint16_t OldOilTempCompValues[]         = {Old_sensor_Temperature_30,Old_sensor_Temperature_40,Old_sensor_Temperature_50,Old_sensor_Temperature_55,Old_sensor_Temperature_60,Old_sensor_Temperature_65,Old_sensor_Temperature_70,Old_sensor_Temperature_75,Old_sensor_Temperature_80,Old_sensor_Temperature_85,Old_sensor_Temperature_90,Old_sensor_Temperature_95,Old_sensor_Temperature_100,Old_sensor_Temperature_105,Old_sensor_Temperature_110,Old_sensor_Temperature_115};
@@ -143,8 +143,7 @@ bool toggleInvertDisplayFlag            = false;
 bool NewOilSensorEquipped               = false;
 bool statusOfExtraOutputPin             = false;
 
-//#define SOFTWAREVERSION               "Y006"
-//#define EEPROMNameSpace               "my_variables"
+
 #define SignalInputPin                2
 #define ISRDebugTogglePin             4
 
@@ -165,6 +164,7 @@ bool statusOfExtraOutputPin             = false;
 #define GC9A01A_RED                   0xF800
 #define GC9A01A_BLUE                  0x001F
 #define time10s_ShowBrandLogo         400
+
 uint8_t BT_rx_buffer[Buffersize];
 
     
@@ -423,25 +423,25 @@ void showOilLevelAtDisplay(uint8_t percentageOillevel,bool initflag)
       }
     }
   }else{
-        tft.fillScreen(GC9A01A_BLACK);
-        /* timeout detected*/
-        tft.setTextSize(4);
+    tft.fillScreen(GC9A01A_BLACK);
+    /* timeout detected*/
+    tft.setTextSize(4);
         /* Position of Text "Check" measured from the Top left corner (0,0) in Pixel */
-        tft.setCursor(55, 65);
-        tft.print("Sensor");
-        tft.setCursor(100, 130);
-        tft.print("OL");
+    tft.setCursor(55, 65);
+    tft.print("Sensor");
+    tft.setCursor(100, 130);
+    tft.print("OL");
         
-        if(toggleInvertDisplayFlag == false)
-        {
-          toggleInvertDisplayFlag = true;
-          tft.invertDisplay(true);
-          delay(1000);
-        }else{
-          toggleInvertDisplayFlag = false;
-          tft.invertDisplay(false);
-          delay(1000);
-        }
+    if(toggleInvertDisplayFlag == false)
+    {
+      toggleInvertDisplayFlag = true;
+      tft.invertDisplay(true);
+      delay(1000);
+    }else{
+      toggleInvertDisplayFlag = false;
+      tft.invertDisplay(false);
+      delay(1000);
+    }
   }
 }
 
@@ -462,7 +462,7 @@ void controlOfDisplay()
   {  
     if(startUpCounter==0)
     {
-      showBrandLogo(brand);
+      showBrandLogo(brandSelector);
     }
     // Position of Text "Check" measured from the Top left corner (0,0) in Pixel 
     tft.setCursor(110, 15);
@@ -512,6 +512,13 @@ void showBrandLogo(uint8_t brandvalue)
     tft.setTextColor(GC9A01A_WHITE);
     TJpgDec.getJpgSize(&w, &h, chevy_logo, sizeof(chevy_logo));
     TJpgDec.drawJpg(0, 80, chevy_logo, sizeof(chevy_logo));
+    
+  }else if(brandvalue == BRAND_BMW){
+    uint16_t w = 0, h = 0;
+    tft.fillScreen(GC9A01A_BLACK);
+    tft.setTextColor(GC9A01A_WHITE);
+    TJpgDec.getJpgSize(&w, &h, bmw_logo, sizeof(bmw_logo));
+    TJpgDec.drawJpg(0, 0, bmw_logo, sizeof(bmw_logo));
   }else if(brandvalue == BRAND_Init){
 
   }
@@ -526,12 +533,12 @@ void readEepromValues()
     
   session               = (uint8_t) preferences.getUChar("session",UDS_Session_Control_Default_Session);
   NewOilSensorEquipped  = preferences.getBool("NewSensorflag",false);
-  brand = preferences.getUChar("Brand",BRAND_VW);
+  brandSelector = preferences.getUChar("Brand",BRAND_VW);
 
-  Modulename                =  preferences.getString("Modulename","1111");
-  PartNumberOilTempSensor   =  preferences.getString("PartNumberOilTempSensor","------------"); 
-  PartNumberWaterTempSensor =  preferences.getString("PartNumberWaterTempSensor","------------"); 
-  HWModuleName              =  preferences.getString("HWModuleName","------------"); 
+  Modulename                =  preferences.getString("Modulename","OilSensor");
+  PartNumberOilTempSensor   =  preferences.getString("PartNumberOilTempSensor",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
+  PartNumberWaterTempSensor =  preferences.getString("PartNumberWaterTempSensor", {'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
+  HWModuleName              =  preferences.getString("HWModuleName",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
 
   
   OldOilTempCompValues[0] = preferences.getUShort("Old_sensor_Temperature_30",Old_sensor_Temperature_30);
@@ -591,8 +598,11 @@ void setup() {
   tft.initDMA();
   //tft.initSPI();
   delay(300);
+  
   //start serial connection
   SerialBT.begin(Modulename);
+
+  //SerialBT = blueSerial(Serial1, true);
   
   /*configure pin SignalInputPin from #define as an input and enable the internal pull-up resistor*/
   pinMode(SignalInputPin, INPUT_PULLUP);
@@ -633,10 +643,67 @@ void setup() {
 
   // The decoder must be given the exact name of the rendering function above
   TJpgDec.setCallback(tft_output);
+
+
+/*
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+  while (WiFi.waitForConnectResult() != WL_CONNECTED) {
+    delay(5000);
+    ESP.restart();
+  }
+
+  // Port defaults to 3232
+   ArduinoOTA.setPort(3232);
+
+  // Hostname defaults to esp3232-[MAC]
+   ArduinoOTA.setHostname("myesp32");
+
+  // Password can be set with plain text (will be hashed internally)
+  // The authentication uses PBKDF2-HMAC-SHA256 with 10,000 iterations
+   ArduinoOTA.setPassword("admin");
+    ArduinoOTA
+    .onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH) {
+        type = "sketch";
+      } else {  // U_SPIFFS
+        type = "filesystem";
+      }
+
+      // NOTE: if updating SPIFFS this would be the place to unmount SPIFFS using SPIFFS.end()
+      //Serial.println("Start updating " + type);
+    })
+    .onEnd([]() {
+      //Serial.println("\nEnd");
+    })
+    .onProgress([](unsigned int progress, unsigned int total) {
+      if (millis() - last_ota_time > 500) {
+        //Serial.printf("Progress: %u%%\n", (progress / (total / 100)));
+        last_ota_time = millis();
+      }
+    })
+    .onError([](ota_error_t error) {
+        //Serial.printf("Error[%u]: ", error);
+      if (error == OTA_AUTH_ERROR) {
+        //Serial.println("Auth Failed");
+      } else if (error == OTA_BEGIN_ERROR) {
+        //Serial.println("Begin Failed");
+      } else if (error == OTA_CONNECT_ERROR) {
+        //Serial.println("Connect Failed");
+      } else if (error == OTA_RECEIVE_ERROR) {
+        //Serial.println("Receive Failed");
+      } else if (error == OTA_END_ERROR) {
+        //Serial.println("End Failed");
+      }
+    });
+
+  ArduinoOTA.begin();*/
 }
 
 
 void loop() {
+  //ArduinoOTA.handle();
   portENTER_CRITICAL(&timerMux);
   orderImpulse(cntRawArr);
   portEXIT_CRITICAL(&timerMux);
