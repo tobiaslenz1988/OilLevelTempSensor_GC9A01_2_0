@@ -93,6 +93,7 @@ T1   T2   T3    T4                  T5                    T1
 #include "brand_defines_common.h"
 #include "bus_common.h"
 #include "softwareversion.h"
+#include "sensors/sensors.h"
 
 
 Preferences preferences;
@@ -105,8 +106,6 @@ bool Impuls_1_Low                       = false;
 bool Impuls_2_High                      = false;
 bool Impuls_2_Low                       = false;
 
-
-//uint8_t state                           = 0x00;
 uint8_t session                         = UDS_Session_Control_Default_Session;
 uint8_t displayselector                 = DISPLAY_SELECTOR_GC9A01;
 
@@ -126,12 +125,13 @@ static uint16_t                         cntRawArr[4];
 static uint16_t                         returnArray[4];
 
       
-portMUX_TYPE timerMux                   =  portMUX_INITIALIZER_UNLOCKED;
-String  Modulename                      =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
-String  HWModuleName                    =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};// ESP32
-String  PartNumberOilTempSensor         =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};
-String  PartNumberWaterTempSensor       =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};
-
+portMUX_TYPE timerMux                           =  portMUX_INITIALIZER_UNLOCKED;
+String  Modulename                              =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
+String  HWModuleName                            =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};// ESP32
+String  vwPartNumberOilTempSensor               =  DEFAULT_VW_PARTNUMBER_OIL_TEMPSENSOR;
+String  supplierPartNumberOilTempSensor         =  DEFAULT_SUPPLIER_PARTNUMBER_OIL_TEMPSENSOR;
+String  vwPartNumberWaterTempSensor             =  DEFAULT_VW_PARTNUMBER_WATER_TEMPSENSOR;
+String  supplierPartNumberWaterTempSensor       =  DEFAULT_SUPPLIER_PARTNUMBER_WATER_TEMPSENSOR;
 
 
 uint16_t OldOilTempCompValues[]         = {Old_sensor_Temperature_30,Old_sensor_Temperature_40,Old_sensor_Temperature_50,Old_sensor_Temperature_55,Old_sensor_Temperature_60,Old_sensor_Temperature_65,Old_sensor_Temperature_70,Old_sensor_Temperature_75,Old_sensor_Temperature_80,Old_sensor_Temperature_85,Old_sensor_Temperature_90,Old_sensor_Temperature_95,Old_sensor_Temperature_100,Old_sensor_Temperature_105,Old_sensor_Temperature_110,Old_sensor_Temperature_115};
@@ -535,12 +535,13 @@ void readEepromValues()
   NewOilSensorEquipped  = preferences.getBool("NewSensorflag",false);
   brandSelector = preferences.getUChar("Brand",BRAND_VW);
 
-  Modulename                =  preferences.getString("Modulename","OilSensor");
-  PartNumberOilTempSensor   =  preferences.getString("PartNumberOilTempSensor",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
-  PartNumberWaterTempSensor =  preferences.getString("PartNumberWaterTempSensor", {'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
-  HWModuleName              =  preferences.getString("HWModuleName",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-', }); 
+  Modulename                              =  preferences.getString("Modulename","OilSensor");
+  HWModuleName                            =  preferences.getString("HWModuleName",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-' }); 
+  vwPartNumberOilTempSensor               =  preferences.getString("PartNumberOilTempSensor",DEFAULT_VW_PARTNUMBER_OIL_TEMPSENSOR);
+  supplierPartNumberOilTempSensor         =  preferences.getString("supplierPartNumberOilTempSensor",DEFAULT_SUPPLIER_PARTNUMBER_OIL_TEMPSENSOR);
+  vwPartNumberWaterTempSensor             =  preferences.getString("PartNumberWaterTempSensor", DEFAULT_VW_PARTNUMBER_WATER_TEMPSENSOR); 
+  supplierPartNumberWaterTempSensor       =  preferences.getString("supplierPartNumberWaterTempSensor", DEFAULT_SUPPLIER_PARTNUMBER_WATER_TEMPSENSOR);
 
-  
   OldOilTempCompValues[0] = preferences.getUShort("Old_sensor_Temperature_30",Old_sensor_Temperature_30);
   OldOilTempCompValues[1] = preferences.getUShort("Old_sensor_Temperature_40",Old_sensor_Temperature_40);
   OldOilTempCompValues[2] = preferences.getUShort("Old_sensor_Temperature_50",Old_sensor_Temperature_50);
@@ -600,7 +601,7 @@ void setup() {
   delay(300);
   
   //start serial connection
-  SerialBT.begin(Modulename);
+  initBtConnection(Modulename);
 
   //SerialBT = blueSerial(Serial1, true);
   
