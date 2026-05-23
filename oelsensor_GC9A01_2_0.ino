@@ -94,6 +94,7 @@ T1   T2   T3    T4                  T5                    T1
 #include "bus_common.h"
 #include "softwareversion.h"
 #include "sensors/sensors.h"
+#include "dtc_oilsensor.h"
 
 
 Preferences preferences;
@@ -128,14 +129,16 @@ static uint16_t                         returnArray[4];
 portMUX_TYPE timerMux                           =  portMUX_INITIALIZER_UNLOCKED;
 String  Modulename                              =  {0,0,0,0,0, 0,0,0,0,0 ,0,0,0,0,0, 0,0,0,0,0};
 String  HWModuleName                            =  {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'};// ESP32
-String  vwPartNumberOilTempSensor               =  DEFAULT_VW_PARTNUMBER_OIL_TEMPSENSOR;
+String  oemPartNumberOilTempSensor              =  DEFAULT_OEM_PARTNUMBER_OIL_TEMPSENSOR;
 String  supplierPartNumberOilTempSensor         =  DEFAULT_SUPPLIER_PARTNUMBER_OIL_TEMPSENSOR;
-String  vwPartNumberWaterTempSensor             =  DEFAULT_VW_PARTNUMBER_WATER_TEMPSENSOR;
+String  oemPartNumberWaterTempSensor            =  DEFAULT_OEM_PARTNUMBER_WATER_TEMPSENSOR;
 String  supplierPartNumberWaterTempSensor       =  DEFAULT_SUPPLIER_PARTNUMBER_WATER_TEMPSENSOR;
 
 
 uint16_t OldOilTempCompValues[]         = {Old_sensor_Temperature_30,Old_sensor_Temperature_40,Old_sensor_Temperature_50,Old_sensor_Temperature_55,Old_sensor_Temperature_60,Old_sensor_Temperature_65,Old_sensor_Temperature_70,Old_sensor_Temperature_75,Old_sensor_Temperature_80,Old_sensor_Temperature_85,Old_sensor_Temperature_90,Old_sensor_Temperature_95,Old_sensor_Temperature_100,Old_sensor_Temperature_105,Old_sensor_Temperature_110,Old_sensor_Temperature_115};
 uint16_t OldOilLevelCompValues[]        = {Old_sensor_OilLevelEmpty,Old_sensor_OilLevel_10,Old_sensor_OilLevel_20,Old_sensor_OilLevel_30,Old_sensor_OilLevel_40,Old_sensor_OilLevel_50,Old_sensor_OilLevel_60,Old_sensor_OilLevel_70,Old_sensor_OilLevel_80,Old_sensor_OilLevel_90,Old_sensor_OilLevelFull};
+
+uint32_t DTC_Storage                    = 0;
 
 bool NewData                            = false;
 bool TimeoutSensorDetected              = true;
@@ -531,17 +534,17 @@ void readEepromValues()
   preferences.clear();
   preferences.begin(EEPROMNameSpace, false);
     
-  session               = (uint8_t) preferences.getUChar("session",UDS_Session_Control_Default_Session);
-  NewOilSensorEquipped  = preferences.getBool("NewSensorflag",false);
-  brandSelector = preferences.getUChar("Brand",BRAND_VW);
+  session                                 = (uint8_t) preferences.getUChar("session",UDS_Session_Control_Default_Session);
+  NewOilSensorEquipped                    = preferences.getBool("NewSensorflag",false);
+  brandSelector                           = preferences.getUChar("Brand",BRAND_VW);
 
   Modulename                              =  preferences.getString("Modulename","OilSensor");
   HWModuleName                            =  preferences.getString("HWModuleName",{'-','-','-','-','-',    '-','-','-','-','-',    '-','-','-','-','-' }); 
-  vwPartNumberOilTempSensor               =  preferences.getString("PartNumberOilTempSensor",DEFAULT_VW_PARTNUMBER_OIL_TEMPSENSOR);
+  oemPartNumberOilTempSensor              =  preferences.getString("PartNumberOilTempSensor",DEFAULT_OEM_PARTNUMBER_OIL_TEMPSENSOR);
   supplierPartNumberOilTempSensor         =  preferences.getString("supplierPartNumberOilTempSensor",DEFAULT_SUPPLIER_PARTNUMBER_OIL_TEMPSENSOR);
-  vwPartNumberWaterTempSensor             =  preferences.getString("PartNumberWaterTempSensor", DEFAULT_VW_PARTNUMBER_WATER_TEMPSENSOR); 
+  oemPartNumberWaterTempSensor            =  preferences.getString("PartNumberWaterTempSensor", DEFAULT_OEM_PARTNUMBER_WATER_TEMPSENSOR); 
   supplierPartNumberWaterTempSensor       =  preferences.getString("supplierPartNumberWaterTempSensor", DEFAULT_SUPPLIER_PARTNUMBER_WATER_TEMPSENSOR);
-
+  update_DTCStorage();
   OldOilTempCompValues[0] = preferences.getUShort("Old_sensor_Temperature_30",Old_sensor_Temperature_30);
   OldOilTempCompValues[1] = preferences.getUShort("Old_sensor_Temperature_40",Old_sensor_Temperature_40);
   OldOilTempCompValues[2] = preferences.getUShort("Old_sensor_Temperature_50",Old_sensor_Temperature_50);
@@ -633,8 +636,7 @@ void setup() {
   SerialBT.onData(getBTData);
   /* Design Reason Background is Dark all Text is White*/
   
-  tft.fillScreen(GC9A01A_BLACK);
-  tft.setTextColor(GC9A01A_WHITE);
+
 
     // The jpeg image can be scaled by a factor of 1, 2, 4, or 8
   TJpgDec.setJpgScale(1);
@@ -644,6 +646,10 @@ void setup() {
 
   // The decoder must be given the exact name of the rendering function above
   TJpgDec.setCallback(tft_output);
+  
+  tft.fillScreen(GC9A01A_BLACK);
+  tft.setTextColor(GC9A01A_WHITE);
+
 }
 
 

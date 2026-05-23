@@ -15,17 +15,18 @@
 #include "softwareversion.h"
 #include "sensors/sensors.h"
 
+
 extern Preferences preferences;
 extern BluetoothSerial SerialBT;
 extern uint8_t session;
-extern String  vwPartNumberOilTempSensor        ;
+extern String  oemPartNumberOilTempSensor       ;
 extern String  supplierPartNumberOilTempSensor  ;    
-extern String  vwPartNumberWaterTempSensor      ;
+extern String  oemPartNumberWaterTempSensor     ;
 extern String  supplierPartNumberWaterTempSensor;      
 extern String  HWModuleName                     ;     
 
 
-void delete_BT_buffer()
+void delete_BT_buffer(void)
 {
   for(int z=0;z<Buffersize;z++)
   {
@@ -87,9 +88,9 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(0xF1);
         BUS_output(0x91); 
         uint8_t i=0;
-        while(vwPartNumberOilTempSensor[i] != '-')
+        while(oemPartNumberOilTempSensor[i] != '-')
         {
-          BUS_output(vwPartNumberOilTempSensor[i]);
+          BUS_output(oemPartNumberOilTempSensor[i]);
           i=i+1;
         }
     
@@ -103,9 +104,9 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         BUS_output(0xF1);
         BUS_output(0x92); 
         uint8_t i=0;
-        while(vwPartNumberWaterTempSensor[i] != '-')
+        while(oemPartNumberWaterTempSensor[i] != '-')
         {
-          BUS_output(vwPartNumberWaterTempSensor[i]);
+          BUS_output(oemPartNumberWaterTempSensor[i]);
           i=i+1;
         }
       }else
@@ -355,13 +356,13 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
 
           uint8_t i; 
           String tempStr;
-          vwPartNumberOilTempSensor = DEFAULT_VW_PARTNUMBER_OIL_TEMPSENSOR;
+          oemPartNumberOilTempSensor = DEFAULT_OEM_PARTNUMBER_OIL_TEMPSENSOR;
           uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
             //Modulename[i] =  (char) receive_BT_Array[4+i];
             tempStr.concat((char) receive_BT_Array[4+i]);
-            vwPartNumberOilTempSensor[i] = receive_BT_Array[4+i];
+            oemPartNumberOilTempSensor[i] = receive_BT_Array[4+i];
           }
       
           preferences.begin(EEPROMNameSpace, false); 
@@ -380,12 +381,12 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
 
           uint8_t i; 
           String tempStr;
-          vwPartNumberWaterTempSensor = DEFAULT_VW_PARTNUMBER_WATER_TEMPSENSOR;
+          oemPartNumberWaterTempSensor = DEFAULT_OEM_PARTNUMBER_WATER_TEMPSENSOR;
            uint8_t length_of_name = receive_BT_Array[3];
           for (i=0;i<length_of_name;i++)
           {
             tempStr.concat((char) receive_BT_Array[4+i]);
-            vwPartNumberWaterTempSensor[i] = receive_BT_Array[4+i];
+            oemPartNumberWaterTempSensor[i] = receive_BT_Array[4+i];
           }
       
           preferences.begin(EEPROMNameSpace, false); 

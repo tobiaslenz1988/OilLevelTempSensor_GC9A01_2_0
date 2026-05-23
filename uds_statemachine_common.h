@@ -13,7 +13,7 @@ extern uint8_t brandSelector;
 extern char SoftwareVersion[];
 extern String Modulename;
 void analyse_BT_Protocol(uint8_t receive_BT_Array[]);
-void delete_BT_buffer();
+void delete_BT_buffer(void);
 
 
 #endif /* UDS_STATEMACHINE_COMMON_H */

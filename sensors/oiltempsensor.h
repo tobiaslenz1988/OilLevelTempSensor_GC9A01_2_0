@@ -8,7 +8,7 @@
 #define SENSOR_OILTEMPSENSOR_BMW_UNDEFINED                                     0x10
 #define SENSOR_OILTEMPSENSOR_MERCEDES_UNDEFINED                                0x20
 
-#define DEFAULT_VW_PARTNUMBER_OIL_TEMPSENSOR                                   {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'}
+#define DEFAULT_OEM_PARTNUMBER_OIL_TEMPSENSOR                                   {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'}
 #define DEFAULT_SUPPLIER_PARTNUMBER_OIL_TEMPSENSOR                             {'-','-','-','-','-', '-','-','-','-','-', '-','-','-','-','-'}
 
 

@@ -85,8 +85,8 @@ extern uint8_t oilLevelPercentage ;
 
 
 
-extern uint8_t testValue_oilTemperature;
-extern uint8_t testValue_oilLevelPercentage;
+extern uint8_t  testValue_oilTemperature;
+extern uint8_t  testValue_oilLevelPercentage;
 extern uint16_t OldOilTempCompValues[16];
 extern uint16_t OldOilLevelCompValues[11];
 extern uint16_t NewOilTempCompValues[16];
