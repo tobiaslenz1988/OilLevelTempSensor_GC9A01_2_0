@@ -556,7 +556,7 @@ void analyse_BT_Protocol(uint8_t receive_BT_Array[])
         }
         else
         {
-          if((val==BRAND_AUDI_ALT)||(val==BRAND_VW)||(val==BRAND_AUDI_NEU)||(val==BRAND_CHEVY)||(val==BRAND_DODGE)||(val==BRAND_NISSAN_GTT)||(val==BRAND_BMW))
+          if((val==BRAND_AUDI_ALT)||(val==BRAND_VW)||(val==BRAND_AUDI_NEU)||(val==BRAND_CHEVY)||(val==BRAND_DODGE)||(val==BRAND_NISSAN_GTT)||(val==BRAND_BMW)||(val==BRAND_MERCEDES_OLD))
           {
             brandSelector = val;
             preferences.begin(EEPROMNameSpace, false); 

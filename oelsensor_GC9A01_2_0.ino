@@ -480,14 +480,13 @@ void controlOfDisplay()
 }
 void showBrandLogo(uint8_t brandvalue)
 {  
+  uint16_t w = 0, h = 0;
   if(brandvalue == BRAND_VW){
-    uint16_t w = 0, h = 0;
     tft.setTextColor(GC9A01A_BLACK);
     TJpgDec.getJpgSize(&w, &h, vw_logo, sizeof(vw_logo));
     TJpgDec.drawJpg(0, 0, vw_logo, sizeof(vw_logo));
 
   }else if(brandvalue == BRAND_AUDI_ALT){
-    uint16_t w = 0, h = 0;
     tft.fillScreen(GC9A01A_WHITE);
     tft.setTextColor(GC9A01A_BLACK);
     TJpgDec.getJpgSize(&w, &h, audi_alt_logo, sizeof(audi_alt_logo));
@@ -496,34 +495,35 @@ void showBrandLogo(uint8_t brandvalue)
   }else if(brandvalue == BRAND_AUDI_NEU){
 
   }else if(brandvalue == BRAND_DODGE){
-    uint16_t w = 0, h = 0;
     tft.fillScreen(GC9A01A_BLACK);
     tft.setTextColor(GC9A01A_WHITE);
     TJpgDec.getJpgSize(&w, &h, dodge_logo, sizeof(dodge_logo));
     TJpgDec.drawJpg(0, 115, dodge_logo, sizeof(dodge_logo));
 
   }else if(brandvalue == BRAND_NISSAN_GTT){
-    uint16_t w = 0, h = 0;
     tft.fillScreen(GC9A01A_WHITE);
     tft.setTextColor(GC9A01A_BLACK);
     TJpgDec.getJpgSize(&w, &h, gtt_logo, sizeof(gtt_logo));
     TJpgDec.drawJpg(5, 50, gtt_logo, sizeof(gtt_logo));
 
   }else if(brandvalue == BRAND_CHEVY){
-    uint16_t w = 0, h = 0;
     tft.fillScreen(GC9A01A_BLACK);
     tft.setTextColor(GC9A01A_WHITE);
     TJpgDec.getJpgSize(&w, &h, chevy_logo, sizeof(chevy_logo));
     TJpgDec.drawJpg(0, 80, chevy_logo, sizeof(chevy_logo));
     
   }else if(brandvalue == BRAND_BMW){
-    uint16_t w = 0, h = 0;
     tft.fillScreen(GC9A01A_BLACK);
     tft.setTextColor(GC9A01A_WHITE);
     TJpgDec.getJpgSize(&w, &h, bmw_logo, sizeof(bmw_logo));
     TJpgDec.drawJpg(0, 0, bmw_logo, sizeof(bmw_logo));
+  }else if(brandvalue == BRAND_MERCEDES_OLD){
+    tft.fillScreen(GC9A01A_BLACK);
+    tft.setTextColor(GC9A01A_BLACK);
+    TJpgDec.getJpgSize(&w, &h, mercedes_old_logo, sizeof(mercedes_old_logo));
+    TJpgDec.drawJpg(0, 0, mercedes_old_logo, sizeof(mercedes_old_logo));
   }else if(brandvalue == BRAND_Init){
-
+    
   }
   
 }
